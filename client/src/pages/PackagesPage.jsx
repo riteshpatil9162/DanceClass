@@ -10,7 +10,7 @@ import Spinner from '../components/common/Spinner';
 import { loadRazorpay } from '../utils/razorpay';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'Course';
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function PackagesPage() {
   const { data: packages, isLoading } = useQuery({

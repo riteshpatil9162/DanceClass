@@ -3,7 +3,7 @@ import { Calendar, MapPin, Users, Clock, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import Countdown from '../common/Countdown';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function EventCard({ event, showCountdown = false }) {
   const now = new Date();

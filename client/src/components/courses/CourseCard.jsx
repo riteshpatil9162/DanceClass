@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users, Star, Tag, Infinity } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function CourseCard({ course }) {
   const price = course.discountedPrice || course.price;
