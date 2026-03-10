@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Disallow admin panel from search engines
+Disallow: /admin/
+Disallow: /admin
+
+# Disallow private user pages
+Disallow: /dashboard
+Disallow: /profile
+
+# Allow static assets
+Allow: /assets/
+
+Sitemap: https://yourdomain.com/sitemap.xml
