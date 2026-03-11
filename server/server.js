@@ -33,19 +33,21 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS — in dev allow any localhost port; in prod restrict to CLIENT_URL
-const isDev = process.env.NODE_ENV !== 'production';
+// CORS — always allow localhost in dev + Vercel frontend in prod
+const ALLOWED_ORIGINS = [
+  'https://dance-class-eight.vercel.app',   // production frontend (hardcoded — never breaks)
+  ...(process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean), // extra origins from env
+];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, Postman, server-to-server)
+      // Allow requests with no origin (curl, Postman, mobile apps, server-to-server)
       if (!origin) return callback(null, true);
-      // In development allow any localhost origin
-      if (isDev && /^http:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
-      // In production (or dev with explicit CLIENT_URL) check the whitelist
-      const whitelist = (process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
-      if (whitelist.includes(origin)) return callback(null, true);
+      // Always allow any localhost origin (for local development)
+      if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+      // Allow whitelisted production origins
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
       callback(null, false);
     },
     credentials: true,
