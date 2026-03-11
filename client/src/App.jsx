@@ -8,6 +8,7 @@ import { useAdminStore } from './store/adminStore';
 import MainLayout from './components/layout/MainLayout';
 import AdminLayout from './components/admin/AdminLayout';
 import PageLoader from './components/common/PageLoader';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // ─── Public Pages ──────────────────────────────────────────────────────────────
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -67,6 +68,7 @@ function RequireAdmin() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Helmet
         defaultTitle={import.meta.env.VITE_APP_NAME}
         titleTemplate={`%s — ${import.meta.env.VITE_APP_NAME}`}
