@@ -48,7 +48,7 @@ export default function CoursesPage() {
 
       {/* Header */}
       <div className="bg-dark-900/80 border-b border-dark-700 py-12">
-        <div className="page-container">
+        <div className="page-container text-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-white mb-2">All Courses</h1>
           <p className="text-dark-400">
             {meta?.total || 0} courses available to start your journey

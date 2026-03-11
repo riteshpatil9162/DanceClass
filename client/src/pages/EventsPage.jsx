@@ -29,7 +29,7 @@ export default function EventsPage() {
       </Helmet>
 
       <div className="bg-dark-900/80 border-b border-dark-700 py-12">
-        <div className="page-container">
+        <div className="page-container text-center">
           <h1 className="text-4xl font-heading font-bold text-white mb-2">Events</h1>
           <p className="text-dark-400">Join our live workshops, seminars, and bootcamps</p>
         </div>
