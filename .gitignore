@@ -21,6 +21,8 @@ server/server.log
 .env
 .env.*
 !.env.example
+# Allow client/.env — only contains public VITE_ vars (no secrets), needed for Vercel build
+!client/.env
 
 # ── Uploads / user-generated files ────────────────────────────
 server/uploads/
