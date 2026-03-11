@@ -1,27 +1,26 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Play, Users, BookOpen, Star, Award, Zap, TrendingUp } from 'lucide-react';
+import { ArrowRight, Play, Users, BookOpen, Star, Award, Zap, Music2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { getFeaturedCourses, getUpcomingEvents, getPackages } from '../api';
 import CourseCard from '../components/courses/CourseCard';
 import EventCard from '../components/events/EventCard';
 import Spinner from '../components/common/Spinner';
 
-const APP_NAME = import.meta.env.VITE_APP_NAME || 'Course';
+const APP_NAME = import.meta.env.VITE_APP_NAME || 'Dance Academy';
 
 const stats = [
-  { icon: Users, value: '10,000+', label: 'Happy Students' },
-  { icon: BookOpen, value: '100+', label: 'Courses Available' },
-  { icon: Star, value: '4.9/5', label: 'Average Rating' },
-  { icon: Award, value: '50+', label: 'Expert Instructors' },
+  { icon: Users,    value: '5,000+', label: 'Students Enrolled' },
+  { icon: BookOpen, value: '30+',    label: 'Dance Courses' },
+  { icon: Star,     value: '4.9/5',  label: 'Average Rating' },
+  { icon: Award,    value: '10+',    label: 'Expert Instructors' },
 ];
 
 const features = [
-  { icon: Zap, title: 'Learn at Your Pace', desc: 'Access courses anytime, on any device, at your convenience.' },
-  { icon: Award, title: 'Expert Instructors', desc: 'Learn from industry professionals with real-world experience.' },
-  { icon: TrendingUp, title: 'Career Growth', desc: 'Courses designed to accelerate your professional journey.' },
-  { icon: Star, title: 'Lifetime Access', desc: 'Get lifetime access to purchased courses, learn forever.' },
+  { icon: Music2,   title: 'All Dance Styles',    desc: 'Bollywood, Hip-Hop, Classical, Freestyle, Salsa — something for everyone.' },
+  { icon: Award,    title: 'Pro Instructors',      desc: 'Learn from trained dancers with years of stage and teaching experience.' },
+  { icon: Zap,      title: 'Learn at Your Pace',   desc: 'Watch lessons anytime, on any device, as many times as you need.' },
+  { icon: Star,     title: 'Lifetime Access',       desc: 'Buy once and revisit your course forever — no expiry, no pressure.' },
 ];
 
 export default function HomePage() {
@@ -43,11 +42,11 @@ export default function HomePage() {
   return (
     <>
       <Helmet>
-        <title>{APP_NAME} - Learn. Grow. Succeed.</title>
-        <meta name="description" content="Join thousands of learners on Course. Access expert-led online courses, live events, and course packages. Start learning today!" />
-        <meta name="keywords" content="online courses, e-learning, events, skill development, professional courses" />
-        <meta property="og:title" content={`${APP_NAME} - Learn. Grow. Succeed.`} />
-        <meta property="og:description" content="Join thousands of learners. Access expert-led online courses, live events, and course packages." />
+        <title>{APP_NAME} — Learn Dance Online</title>
+        <meta name="description" content="Join Dance Academy and learn Bollywood, Hip-Hop, Classical and more from expert instructors. Online dance courses, live workshops and events — all in one place." />
+        <meta name="keywords" content="dance classes online, bollywood dance, hip hop dance, classical dance, dance academy, dance courses India" />
+        <meta property="og:title" content={`${APP_NAME} — Learn Dance Online`} />
+        <meta property="og:description" content="Expert-led online dance courses and live events. Learn at your own pace, on any device." />
         <meta property="og:type" content="website" />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
@@ -65,17 +64,17 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500/10 border border-primary-500/30 rounded-full text-primary-400 text-sm font-medium mb-8">
               <Zap size={14} />
-              <span>Start your learning journey today</span>
+              <span>India's favourite online dance school</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-black text-white leading-tight mb-6">
-              Learn Skills That
+              Move. Express.
               <br />
-              <span className="text-gradient">Matter Most</span>
+              <span className="text-gradient">Dance Your Way.</span>
             </h1>
 
             <p className="text-dark-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-              Access world-class online courses, attend transformative live events, and join a community of passionate learners. Your success story starts here.
+              Learn Bollywood, Hip-Hop, Classical and more from professional instructors — at your own pace, from anywhere. Join thousands of students already dancing with us.
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-16">
@@ -83,7 +82,7 @@ export default function HomePage() {
                 Explore Courses <ArrowRight size={18} />
               </Link>
               <Link to="/events" className="btn-secondary text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4">
-                <Play size={18} /> Upcoming Events
+                <Play size={18} /> Live Workshops
               </Link>
             </div>
 
@@ -107,8 +106,8 @@ export default function HomePage() {
           <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
             <div>
               <p className="text-primary-500 font-medium text-sm uppercase tracking-wider mb-2">Top Picks</p>
-              <h2 className="section-title">Featured Courses</h2>
-              <p className="section-subtitle">Handpicked courses to accelerate your growth</p>
+              <h2 className="section-title">Featured Dance Courses</h2>
+              <p className="section-subtitle">Handpicked courses for every style and skill level</p>
             </div>
             <Link to="/courses" className="btn-secondary btn-sm hidden md:flex">
               View All <ArrowRight size={14} />
@@ -138,7 +137,7 @@ export default function HomePage() {
         <div className="page-container">
           <div className="text-center mb-14">
             <p className="text-primary-500 font-medium text-sm uppercase tracking-wider mb-2">Why Choose Us</p>
-            <h2 className="section-title">Everything You Need to Succeed</h2>
+            <h2 className="section-title">Everything You Need to Start Dancing</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map(({ icon: Icon, title, desc }) => (
@@ -161,8 +160,8 @@ export default function HomePage() {
             <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
               <div>
                 <p className="text-primary-500 font-medium text-sm uppercase tracking-wider mb-2">Don't Miss Out</p>
-                <h2 className="section-title">Upcoming Events</h2>
-                <p className="section-subtitle">Live sessions, workshops and seminars</p>
+                <h2 className="section-title">Upcoming Workshops & Events</h2>
+                <p className="section-subtitle">Live dance sessions, group classes and special performances</p>
               </div>
               <Link to="/events" className="btn-secondary btn-sm hidden md:flex">
                 All Events <ArrowRight size={14} />
@@ -189,7 +188,7 @@ export default function HomePage() {
             <div className="text-center mb-12">
               <p className="text-primary-500 font-medium text-sm uppercase tracking-wider mb-2">Best Value</p>
               <h2 className="section-title">Course Packages & Combos</h2>
-              <p className="section-subtitle">Buy a bundle and save more</p>
+              <p className="section-subtitle">Bundle multiple dance styles and save more</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {packagesData.slice(0, 3).map((pkg) => (
@@ -248,14 +247,14 @@ export default function HomePage() {
         </div>
         <div className="page-container text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white mb-5">
-            Ready to Start Learning?
+            Ready to Start Dancing?
           </h2>
           <p className="text-primary-100 text-lg mb-10 max-w-2xl mx-auto">
-            Join thousands of learners who have already transformed their careers. Get started for free today.
+            Join thousands of students who are already learning, moving and growing with {APP_NAME}. Your first step starts here.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/register" className="bg-white text-primary-600 hover:bg-primary-50 font-bold py-3 sm:py-4 px-7 sm:px-10 rounded-xl transition-all duration-200 transform hover:scale-105">
-              Start for Free
+              Join for Free
             </Link>
             <Link to="/courses" className="border-2 border-white/50 text-white hover:bg-white/10 font-semibold py-3 sm:py-4 px-7 sm:px-10 rounded-xl transition-all duration-200">
               Browse Courses
