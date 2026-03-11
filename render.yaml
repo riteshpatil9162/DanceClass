@@ -41,6 +41,6 @@ services:
       - key: EMAIL_FROM
         sync: false
       - key: CLIENT_URL
-        sync: false
+        value: https://dance-class-eight.vercel.app
       - key: MAX_FILE_SIZE
         value: 5242880
