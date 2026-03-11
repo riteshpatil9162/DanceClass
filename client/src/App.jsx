@@ -6,6 +6,7 @@ import { useAuthStore } from './store/authStore';
 import { useAdminStore } from './store/adminStore';
 
 import MainLayout from './components/layout/MainLayout';
+import UserLayout from './components/layout/UserLayout';
 import AdminLayout from './components/admin/AdminLayout';
 import PageLoader from './components/common/PageLoader';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -95,7 +96,10 @@ export default function App() {
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
             </Route>
+          </Route>
 
+          {/* ── User routes (with Navbar, NO Footer) ── */}
+          <Route element={<UserLayout />}>
             {/* Protected user routes */}
             <Route element={<RequireUser />}>
               <Route path="dashboard" element={<DashboardPage />} />

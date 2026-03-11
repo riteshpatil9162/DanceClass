@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Clock, Users, Star, Tag, Infinity } from 'lucide-react';
+import { Users, Star, Tag, Infinity, CheckCircle } from 'lucide-react';
+import useAuthStore from '../../store/authStore';
 
 const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function CourseCard({ course }) {
+  const { hasCourseAccess } = useAuthStore();
+  const isPurchased = hasCourseAccess(course._id);
   const price = course.discountedPrice || course.price;
   const isFree = course.isFree || course.price === 0;
 
@@ -101,7 +104,11 @@ export default function CourseCard({ course }) {
         {/* Price + CTA */}
         <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-dark-700">
           <div>
-            {isFree ? (
+            {isPurchased ? (
+              <span className="flex items-center gap-1 text-emerald-400 font-semibold text-sm">
+                <CheckCircle size={14} className="shrink-0" /> Purchased
+              </span>
+            ) : isFree ? (
               <span className="text-emerald-400 font-bold text-lg">FREE</span>
             ) : (
               <div className="flex items-center gap-2">
@@ -114,9 +121,9 @@ export default function CourseCard({ course }) {
           </div>
           <Link
             to={`/courses/${course.slug}`}
-            className="btn-primary btn-sm text-xs px-4 py-2"
+            className={`btn-sm text-xs px-4 py-2 ${isPurchased ? 'btn-outline border-emerald-500 text-emerald-400 hover:bg-emerald-500/10' : 'btn-primary'}`}
           >
-            {isFree ? 'Enroll Free' : 'Buy Now'}
+            {isPurchased ? 'Access Course' : isFree ? 'Enroll Free' : 'Buy Now'}
           </Link>
         </div>
       </div>

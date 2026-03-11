@@ -89,8 +89,8 @@ export default function CourseDetailPage() {
             });
             toast.success('Payment successful! Course access granted.');
             setTimeout(() => window.location.reload(), 1500);
-          } catch {
-            toast.error('Payment verification failed. Contact support.');
+          } catch (verifyErr) {
+            toast.error(verifyErr?.response?.data?.message || 'Payment verification failed. Contact support.');
           }
         },
         prefill: { name: user?.name, email: user?.email },
