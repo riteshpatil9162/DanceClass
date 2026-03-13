@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getCourses, getCategories } from '../api';
 import CourseCard from '../components/courses/CourseCard';
 import Spinner from '../components/common/Spinner';
+import useAuthStore from '../store/authStore';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'Course';
 
@@ -13,6 +15,9 @@ export default function CoursesPage() {
   const [category, setCategory] = useState('');
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
+  const [showPurchased, setShowPurchased] = useState(false);
+
+  const { isAuthenticated, hasCourseAccess } = useAuthStore();
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -25,8 +30,13 @@ export default function CoursesPage() {
     keepPreviousData: true,
   });
 
-  const courses = data?.data || [];
+  const allCourses = data?.data || [];
+  // Filter out purchased courses from the main listing unless user wants to see them
+  const courses = showPurchased
+    ? allCourses
+    : allCourses.filter((c) => !hasCourseAccess(c._id));
   const meta = data?.meta;
+  const purchasedCount = isAuthenticated ? allCourses.filter((c) => hasCourseAccess(c._id)).length : 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -55,6 +65,29 @@ export default function CoursesPage() {
           </p>
         </div>
       </div>
+
+      {/* My Purchased Courses Banner */}
+      {isAuthenticated && purchasedCount > 0 && (
+        <div className="bg-emerald-500/10 border-b border-emerald-500/20">
+          <div className="page-container py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-emerald-400 text-sm">
+              <BookOpen size={16} />
+              <span>You have <strong>{purchasedCount}</strong> purchased course{purchasedCount > 1 ? 's' : ''} {showPurchased ? 'shown below' : 'hidden from this list'}.</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPurchased((v) => !v)}
+                className="text-xs text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
+              >
+                {showPurchased ? 'Hide purchased' : 'Show purchased'}
+              </button>
+              <Link to="/dashboard" className="btn-sm bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 text-xs px-3 py-1.5 rounded-lg">
+                My Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="page-container py-10">
         {/* Filters */}
@@ -109,9 +142,19 @@ export default function CoursesPage() {
         ) : courses.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-6xl mb-4">📚</p>
-            <h3 className="text-white font-semibold text-xl mb-2">No Courses Found</h3>
-            <p className="text-dark-400 mb-6">Try adjusting your filters or search term</p>
-            <button onClick={clearFilters} className="btn-primary">Clear Filters</button>
+            {!showPurchased && purchasedCount > 0 && !hasFilters ? (
+              <>
+                <h3 className="text-white font-semibold text-xl mb-2">You've purchased all available courses!</h3>
+                <p className="text-dark-400 mb-6">All courses here are already in your library.</p>
+                <Link to="/dashboard" className="btn-primary">Go to My Dashboard</Link>
+              </>
+            ) : (
+              <>
+                <h3 className="text-white font-semibold text-xl mb-2">No Courses Found</h3>
+                <p className="text-dark-400 mb-6">Try adjusting your filters or search term</p>
+                <button onClick={clearFilters} className="btn-primary">Clear Filters</button>
+              </>
+            )}
           </div>
         ) : (
           <>

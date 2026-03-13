@@ -14,6 +14,7 @@ const useAuthStore = create(
         set({ user, token, isAuthenticated: true });
       },
 
+      // Update the stored user object (used after profile fetch / purchase grant)
       updateUser: (user) => set({ user }),
       setUser: (user) => set({ user }),
 
@@ -25,10 +26,12 @@ const useAuthStore = create(
 
       hasCourseAccess: (courseId) => {
         const { user } = get();
-        if (!user) return false;
-        const entry = user.purchasedCourses?.find(
-          (p) => (p.course?._id || p.course) === courseId
-        );
+        if (!user || !courseId) return false;
+        const idStr = courseId.toString();
+        const entry = user.purchasedCourses?.find((p) => {
+          const pid = (p.course?._id || p.course || '').toString();
+          return pid === idStr;
+        });
         if (!entry) return false;
         if (!entry.expiresAt) return true;
         return new Date(entry.expiresAt) > new Date();
@@ -36,18 +39,21 @@ const useAuthStore = create(
 
       hasEventBooked: (eventId) => {
         const { user } = get();
-        if (!user) return false;
-        return user.bookedEvents?.some(
-          (b) => (b.event?._id || b.event) === eventId
-        );
+        if (!user || !eventId) return false;
+        const idStr = eventId.toString();
+        return user.bookedEvents?.some((b) => {
+          const bid = (b.event?._id || b.event || '').toString();
+          return bid === idStr;
+        });
       },
     }),
-    { name: 'user-auth',
+    {
+      name: 'user-auth',
       onRehydrateStorage: () => (state) => {
         if (state) state.loading = false;
       },
-    }
-  )
+    },
+  ),
 );
 
 export { useAuthStore };

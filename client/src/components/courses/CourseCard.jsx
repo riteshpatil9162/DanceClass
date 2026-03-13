@@ -120,10 +120,10 @@ export default function CourseCard({ course }) {
             )}
           </div>
           <Link
-            to={`/courses/${course.slug}`}
+            to={isPurchased ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`}
             className={`btn-sm text-xs px-4 py-2 ${isPurchased ? 'btn-outline border-emerald-500 text-emerald-400 hover:bg-emerald-500/10' : 'btn-primary'}`}
           >
-            {isPurchased ? 'Access Course' : isFree ? 'Enroll Free' : 'Buy Now'}
+            {isPurchased ? 'Watch Now' : isFree ? 'Enroll Free' : 'Buy Now'}
           </Link>
         </div>
       </div>

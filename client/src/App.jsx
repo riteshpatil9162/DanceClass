@@ -30,6 +30,9 @@ const TermsPage = lazy(() => import('./pages/TermsPage'));
 const RefundPage = lazy(() => import('./pages/RefundPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
+// ─── Course Player (protected — purchased users only) ──────────────────────────
+const CoursePlayerPage = lazy(() => import('./pages/CoursePlayerPage'));
+
 // ─── Admin Pages ───────────────────────────────────────────────────────────────
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
 const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'));
@@ -100,10 +103,16 @@ export default function App() {
 
           {/* ── User routes (with Navbar, NO Footer) ── */}
           <Route element={<UserLayout />}>
-            {/* Protected user routes */}
             <Route element={<RequireUser />}>
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="profile" element={<ProfilePage />} />
+            </Route>
+          </Route>
+
+          {/* ── Course Player — protected, full-screen (no footer) ── */}
+          <Route element={<UserLayout />}>
+            <Route element={<RequireUser />}>
+              <Route path="courses/:slug/learn" element={<CoursePlayerPage />} />
             </Route>
           </Route>
 
@@ -112,7 +121,6 @@ export default function App() {
 
           {/* ── Admin section ── */}
           <Route path="/admin">
-            {/* Protected admin routes */}
             <Route element={<RequireAdmin />}>
               <Route element={<AdminLayout />}>
                 <Route index element={<AdminDashboardPage />} />

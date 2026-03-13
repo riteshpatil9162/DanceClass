@@ -45,6 +45,26 @@ exports.getCourseBySlug = async (req, res, next) => {
   }
 };
 
+// @desc    Get full course content (curriculum with videoUrls) — only for enrolled users
+// @access  Private (user must have purchased / enrolled in the course)
+exports.getCourseContent = async (req, res, next) => {
+  try {
+    const course = await Course.findOne({ slug: req.params.slug, isPublished: true, isActive: true });
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
+    // Check access
+    const hasAccess = req.user.hasCourseAccess(course._id.toString());
+    if (!hasAccess) {
+      return res.status(403).json({ success: false, message: 'You do not have access to this course. Please purchase it first.' });
+    }
+
+    // Return full course including all videoUrls
+    res.json({ success: true, data: course });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Get featured courses
 exports.getFeaturedCourses = async (req, res, next) => {
   try {
@@ -75,9 +95,29 @@ exports.createCourse = async (req, res, next) => {
   try {
     const courseData = { ...req.body, createdBy: req.admin._id };
     if (req.file) {
-      courseData.thumbnail = req.file.path;           // Cloudinary secure URL
-      courseData.thumbnailPublicId = req.file.filename; // Cloudinary public_id
+      courseData.thumbnail = req.file.path;
+      courseData.thumbnailPublicId = req.file.filename;
     }
+    // curriculum arrives as a parsed array (JSON body) or a string (FormData)
+    if (typeof courseData.curriculum === 'string') {
+      try {
+        courseData.curriculum = JSON.parse(courseData.curriculum);
+      } catch {
+        return res.status(400).json({ success: false, message: 'Invalid curriculum format' });
+      }
+    }
+    // Coerce string booleans that come from FormData
+    if (typeof courseData.isFree === 'string') courseData.isFree = courseData.isFree === 'true';
+    if (typeof courseData.isPublished === 'string') courseData.isPublished = courseData.isPublished === 'true';
+    // tags arrives as a JSON string from FormData or a real array from JSON body
+    if (typeof courseData.tags === 'string') {
+      try { courseData.tags = JSON.parse(courseData.tags); } catch { courseData.tags = []; }
+    }
+    // Coerce numbers that come as strings from FormData
+    if (typeof courseData.price === 'string') courseData.price = Number(courseData.price) || 0;
+    if (courseData.discountedPrice !== undefined && courseData.discountedPrice !== null)
+      courseData.discountedPrice = Number(courseData.discountedPrice) || null;
+
     const course = await Course.create(courseData);
     res.status(201).json({ success: true, data: course });
   } catch (err) {
@@ -94,11 +134,30 @@ exports.updateCourse = async (req, res, next) => {
     const updateData = { ...req.body };
 
     if (req.file) {
-      // Delete old image from Cloudinary
       await deleteFromCloudinary(course.thumbnailPublicId);
       updateData.thumbnail = req.file.path;
       updateData.thumbnailPublicId = req.file.filename;
     }
+
+    // curriculum arrives as a parsed array (JSON body) or a string (FormData)
+    if (typeof updateData.curriculum === 'string') {
+      try {
+        updateData.curriculum = JSON.parse(updateData.curriculum);
+      } catch {
+        return res.status(400).json({ success: false, message: 'Invalid curriculum format' });
+      }
+    }
+    // Coerce string booleans that come from FormData
+    if (typeof updateData.isFree === 'string') updateData.isFree = updateData.isFree === 'true';
+    if (typeof updateData.isPublished === 'string') updateData.isPublished = updateData.isPublished === 'true';
+    // tags arrives as a JSON string from FormData or a real array from JSON body
+    if (typeof updateData.tags === 'string') {
+      try { updateData.tags = JSON.parse(updateData.tags); } catch { updateData.tags = []; }
+    }
+    // Coerce numbers that come as strings from FormData
+    if (typeof updateData.price === 'string') updateData.price = Number(updateData.price) || 0;
+    if (updateData.discountedPrice !== undefined && updateData.discountedPrice !== null)
+      updateData.discountedPrice = Number(updateData.discountedPrice) || null;
 
     const updated = await Course.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

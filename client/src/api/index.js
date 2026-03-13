@@ -4,8 +4,7 @@ import api from './axios';
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
 export const getUserProfile = () => api.get('/auth/profile');
-export const updateUserProfile = (data) =>
-  api.put('/auth/profile', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateUserProfile = (data) => api.put('/auth/profile', data);
 // Alias used by ProfilePage
 export const updateProfile = updateUserProfile;
 export const changePassword = (data) => api.put('/auth/change-password', data);
@@ -13,6 +12,7 @@ export const changePassword = (data) => api.put('/auth/change-password', data);
 // Courses
 export const getCourses = (params) => api.get('/courses', { params });
 export const getCourseBySlug = (slug) => api.get(`/courses/${slug}`);
+export const getCourseContent = (slug) => api.get(`/courses/${slug}/content`);
 export const getFeaturedCourses = () => api.get('/courses/featured');
 export const getCategories = () => api.get('/courses/categories');
 
@@ -56,10 +56,8 @@ export const updateUserStatus = (id, data) => api.put(`/admin/users/${id}/toggle
 
 // Admin - Courses
 export const adminGetCourses = () => api.get('/courses/admin/all');
-export const createCourse = (data) =>
-  api.post('/courses/admin/create', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const updateCourse = (id, data) =>
-  api.put(`/courses/admin/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createCourse = (data) => api.post('/courses/admin/create', data);
+export const updateCourse = (id, data) => api.put(`/courses/admin/${id}`, data);
 export const deleteCourse = (id) => api.delete(`/courses/admin/${id}`);
 export const toggleCoursePublish = (id) => api.patch(`/courses/admin/${id}/toggle-publish`);
 
@@ -67,15 +65,10 @@ export const toggleCoursePublish = (id) => api.patch(`/courses/admin/${id}/toggl
 export const adminGetEvents = () => api.get('/events/admin/all');
 // Aliases for pages that use the older naming convention
 export const getAdminEvents = adminGetEvents;
-export const createEvent = (data) =>
-  api.post('/events/admin/create', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const updateEvent = (id, data) =>
-  api.put(`/events/admin/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createEvent = (data) => api.post('/events/admin/create', data);
+export const updateEvent = (id, data) => api.put(`/events/admin/${id}`, data);
 export const deleteEvent = (id) => api.delete(`/events/admin/${id}`);
-export const updateEventSponsors = (id, data) =>
-  api.put(`/events/admin/${id}/sponsors`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const updateEventSponsors = (id, data) => api.put(`/events/admin/${id}/sponsors`, data);
 export const regenerateBookingSlug = (id) => api.post(`/events/admin/${id}/regen-slug`);
 
 // Admin - Packages
@@ -83,10 +76,8 @@ export const adminGetPackages = () => api.get('/packages/admin/all');
 // Aliases for pages that use the older naming convention
 export const getAdminPackages = adminGetPackages;
 export const getAdminCourses = adminGetCourses;
-export const createPackage = (data) =>
-  api.post('/packages/admin/create', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const updatePackage = (id, data) =>
-  api.put(`/packages/admin/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createPackage = (data) => api.post('/packages/admin/create', data);
+export const updatePackage = (id, data) => api.put(`/packages/admin/${id}`, data);
 export const deletePackage = (id) => api.delete(`/packages/admin/${id}`);
 
 // Admin - Orders

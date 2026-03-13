@@ -108,7 +108,16 @@ const grantFreeCourseAccess = async (user, course, res) => {
     paidAt: new Date(),
   });
 
-  return res.json({ success: true, message: 'Free course access granted', isFree: true });
+  // Return updated purchasedCourses so client can sync immediately
+  const updatedUser = await User.findById(user._id)
+    .populate('purchasedCourses.course', 'title slug thumbnail');
+
+  return res.json({
+    success: true,
+    message: 'Free course access granted',
+    isFree: true,
+    purchasedCourses: updatedUser.purchasedCourses,
+  });
 };
 
 // @desc    Verify course payment
@@ -150,7 +159,15 @@ exports.verifyCoursePayment = async (req, res, next) => {
       await course.save();
     }
 
-    res.json({ success: true, message: 'Payment successful! Course access granted.' });
+    // Return updated purchasedCourses so client can sync without a separate profile fetch
+    const updatedUser = await User.findById(user._id)
+      .populate('purchasedCourses.course', 'title slug thumbnail');
+
+    res.json({
+      success: true,
+      message: 'Payment successful! Course access granted.',
+      purchasedCourses: updatedUser.purchasedCourses,
+    });
   } catch (err) {
     next(err);
   }

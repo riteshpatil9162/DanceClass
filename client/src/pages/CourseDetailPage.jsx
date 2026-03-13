@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import {
   Star, Users, Clock, Globe, Infinity, CheckCircle, Lock,
-  ChevronDown, ChevronUp, Play, ShoppingCart, BookOpen
+  ChevronDown, ChevronUp, Play, ShoppingCart, BookOpen,
 } from 'lucide-react';
 import { getCourseBySlug, createCourseOrder, verifyCoursePayment } from '../api';
 import useAuthStore from '../store/authStore';
@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 export default function CourseDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user, setAuth } = useAuthStore();
+  const { isAuthenticated, user, setAuth, setUser } = useAuthStore();
   const [expandedSection, setExpandedSection] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -36,6 +36,13 @@ export default function CourseDetailPage() {
       })
     : false;
 
+  // If already purchased, redirect straight to the player
+  useEffect(() => {
+    if (hasAccess && course) {
+      navigate(`/courses/${slug}/learn`, { replace: true });
+    }
+  }, [hasAccess, course, slug, navigate]);
+
   const handlePurchase = async () => {
     if (!isAuthenticated) {
       toast.error('Please login to purchase this course');
@@ -44,13 +51,17 @@ export default function CourseDetailPage() {
     }
 
     if (course.isFree || course.price === 0) {
-      // Free enrollment
+      // Free enrollment → grant access then redirect to player
       setIsProcessing(true);
       try {
         const res = await createCourseOrder({ courseId: course._id });
         if (res.data.isFree) {
-          toast.success('Free course access granted!');
-          window.location.reload();
+          // Sync purchasedCourses into Zustand immediately so hasCourseAccess works
+          if (res.data.purchasedCourses) {
+            setUser({ ...user, purchasedCourses: res.data.purchasedCourses });
+          }
+          toast.success('Enrolled successfully! Redirecting to course...');
+          setTimeout(() => navigate(`/courses/${slug}/learn`), 1000);
         }
       } catch (err) {
         toast.error(err.response?.data?.message || 'Enrollment failed');
@@ -81,16 +92,23 @@ export default function CourseDetailPage() {
         order_id: orderId,
         handler: async (response) => {
           try {
-            await verifyCoursePayment({
+            const verifyRes = await verifyCoursePayment({
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
               courseId: course._id,
             });
-            toast.success('Payment successful! Course access granted.');
-            setTimeout(() => window.location.reload(), 1500);
+            // Sync purchasedCourses into Zustand immediately
+            if (verifyRes.data.purchasedCourses) {
+              setUser({ ...user, purchasedCourses: verifyRes.data.purchasedCourses });
+            }
+            toast.success('Payment successful! Redirecting to your course...');
+            setTimeout(() => navigate(`/courses/${slug}/learn`), 1200);
           } catch (verifyErr) {
-            toast.error(verifyErr?.response?.data?.message || 'Payment verification failed. Contact support.');
+            toast.error(
+              verifyErr?.response?.data?.message ||
+                'Payment verification failed. Contact support.',
+            );
           }
         },
         prefill: { name: user?.name, email: user?.email },
@@ -120,22 +138,38 @@ export default function CourseDetailPage() {
     );
   }
 
+  // While redirect fires, show nothing (avoid flash)
+  if (hasAccess) return null;
+
   const thumbnail = course.thumbnail
-    ? course.thumbnail.startsWith('http') ? course.thumbnail : `${API_URL}${course.thumbnail}`
+    ? course.thumbnail.startsWith('http')
+      ? course.thumbnail
+      : `${API_URL}${course.thumbnail}`
     : null;
 
   const price = course.discountedPrice || course.price;
   const isFree = course.isFree || course.price === 0;
-  const totalLectures = course.curriculum?.reduce((s, sec) => s + (sec.lectures?.length || 0), 0) || 0;
+  const totalLectures =
+    course.curriculum?.reduce((s, sec) => s + (sec.lectures?.length || 0), 0) || 0;
 
   return (
     <>
       <Helmet>
         <title>{course.metaTitle || course.title} - {APP_NAME}</title>
-        <meta name="description" content={course.metaDescription || course.shortDescription || course.description?.slice(0, 160)} />
+        <meta
+          name="description"
+          content={
+            course.metaDescription ||
+            course.shortDescription ||
+            course.description?.slice(0, 160)
+          }
+        />
         <meta name="keywords" content={course.metaKeywords?.join(', ') || course.tags?.join(', ')} />
         <meta property="og:title" content={course.title} />
-        <meta property="og:description" content={course.shortDescription || course.description?.slice(0, 200)} />
+        <meta
+          property="og:description"
+          content={course.shortDescription || course.description?.slice(0, 200)}
+        />
         {thumbnail && <meta property="og:image" content={thumbnail} />}
         <link rel="canonical" href={window.location.href} />
       </Helmet>
@@ -159,8 +193,12 @@ export default function CourseDetailPage() {
                 )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-white mb-4">{course.title}</h1>
-              <p className="text-dark-300 text-lg mb-6">{course.shortDescription || course.description?.slice(0, 200)}</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-white mb-4">
+                {course.title}
+              </h1>
+              <p className="text-dark-300 text-lg mb-6">
+                {course.shortDescription || course.description?.slice(0, 200)}
+              </p>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-dark-400 mb-6">
                 {course.rating > 0 && (
@@ -193,6 +231,7 @@ export default function CourseDetailPage() {
               <div className="sticky top-24">
                 <PurchaseCard
                   course={course}
+                  slug={slug}
                   thumbnail={thumbnail}
                   isFree={isFree}
                   price={price}
@@ -216,18 +255,20 @@ export default function CourseDetailPage() {
               <div className="flex items-center gap-2">
                 <span className="text-white font-bold text-xl">₹{price?.toLocaleString()}</span>
                 {course.discountedPrice && (
-                  <span className="text-dark-500 text-sm line-through">₹{course.price?.toLocaleString()}</span>
+                  <span className="text-dark-500 text-sm line-through">
+                    ₹{course.price?.toLocaleString()}
+                  </span>
                 )}
               </div>
             )}
           </div>
-          {hasAccess ? (
-            <button className="btn-primary btn-sm">Access Course</button>
-          ) : (
-            <button onClick={handlePurchase} disabled={isProcessing} className="btn-primary btn-sm">
-              {isProcessing ? <Spinner size="sm" /> : isFree ? 'Enroll Free' : 'Buy Now'}
-            </button>
-          )}
+          <button
+            onClick={handlePurchase}
+            disabled={isProcessing}
+            className="btn-primary btn-sm"
+          >
+            {isProcessing ? <Spinner size="sm" /> : isFree ? 'Enroll Free' : 'Buy Now'}
+          </button>
         </div>
       </div>
 
@@ -247,7 +288,10 @@ export default function CourseDetailPage() {
                 <h3 className="text-sm font-semibold text-dark-300 uppercase tracking-wider mb-3">Tags</h3>
                 <div className="flex flex-wrap gap-2">
                   {course.tags.map((tag) => (
-                    <span key={tag} className="px-3 py-1 bg-dark-800 border border-dark-700 rounded-full text-xs text-dark-300">
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-dark-800 border border-dark-700 rounded-full text-xs text-dark-300"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -255,40 +299,54 @@ export default function CourseDetailPage() {
               </section>
             )}
 
-            {/* Curriculum */}
+            {/* Curriculum Preview */}
             {course.curriculum?.length > 0 && (
               <section>
                 <h2 className="text-xl font-heading font-bold text-white mb-2">Course Curriculum</h2>
-                <p className="text-dark-400 text-sm mb-4">{totalLectures} lectures in {course.curriculum.length} sections</p>
+                <p className="text-dark-400 text-sm mb-4">
+                  {totalLectures} lectures in {course.curriculum.length} sections
+                </p>
                 <div className="space-y-3">
                   {course.curriculum.map((section, idx) => (
                     <div key={idx} className="border border-dark-700 rounded-xl overflow-hidden">
                       <button
-                        onClick={() => setExpandedSection(expandedSection === idx ? -1 : idx)}
+                        onClick={() =>
+                          setExpandedSection(expandedSection === idx ? -1 : idx)
+                        }
                         className="w-full flex items-center justify-between px-5 py-4 bg-dark-800 hover:bg-dark-700 transition-colors text-left"
                       >
                         <div>
                           <span className="text-white font-medium">{section.sectionTitle}</span>
-                          <span className="text-dark-400 text-xs ml-2">({section.lectures?.length || 0} lectures)</span>
+                          <span className="text-dark-400 text-xs ml-2">
+                            ({section.lectures?.length || 0} lectures)
+                          </span>
                         </div>
-                        {expandedSection === idx ? <ChevronUp size={16} className="text-dark-400" /> : <ChevronDown size={16} className="text-dark-400" />}
+                        {expandedSection === idx ? (
+                          <ChevronUp size={16} className="text-dark-400" />
+                        ) : (
+                          <ChevronDown size={16} className="text-dark-400" />
+                        )}
                       </button>
                       {expandedSection === idx && (
                         <div className="divide-y divide-dark-800">
                           {(section.lectures || []).map((lecture, lIdx) => (
                             <div key={lIdx} className="flex items-center gap-3 px-5 py-3 bg-dark-900">
-                              {lecture.isFree || hasAccess ? (
+                              {lecture.isFree ? (
                                 <Play size={14} className="text-primary-500 shrink-0" />
                               ) : (
                                 <Lock size={14} className="text-dark-500 shrink-0" />
                               )}
-                              <span className={`text-sm flex-1 ${lecture.isFree || hasAccess ? 'text-dark-200' : 'text-dark-500'}`}>
+                              <span
+                                className={`text-sm flex-1 ${
+                                  lecture.isFree ? 'text-dark-200' : 'text-dark-500'
+                                }`}
+                              >
                                 {lecture.title}
                               </span>
                               {lecture.duration && (
                                 <span className="text-xs text-dark-500">{lecture.duration}</span>
                               )}
-                              {lecture.isFree && !hasAccess && (
+                              {lecture.isFree && (
                                 <span className="badge-free text-xs">Preview</span>
                               )}
                             </div>
@@ -302,17 +360,16 @@ export default function CourseDetailPage() {
             )}
           </div>
 
-          {/* Right - Purchase Card (Mobile/Tablet hidden on lg) */}
-          <div className="lg:block hidden">
-            {/* Already rendered in sticky above */}
-          </div>
+          {/* Right spacer — card rendered in sticky hero above on lg */}
+          <div className="hidden lg:block" />
         </div>
       </div>
     </>
   );
 }
 
-function PurchaseCard({ course, thumbnail, isFree, price, hasAccess, isProcessing, onPurchase }) {
+// ─── Purchase Card ────────────────────────────────────────────────────────────
+function PurchaseCard({ course, slug, thumbnail, isFree, price, hasAccess, isProcessing, onPurchase }) {
   return (
     <div className="card overflow-hidden">
       {thumbnail && (
@@ -325,7 +382,9 @@ function PurchaseCard({ course, thumbnail, isFree, price, hasAccess, isProcessin
           <div className="mb-1">
             <span className="text-white font-bold text-3xl">₹{price?.toLocaleString()}</span>
             {course.discountedPrice && (
-              <span className="text-dark-500 text-lg line-through ml-2">₹{course.price?.toLocaleString()}</span>
+              <span className="text-dark-500 text-lg line-through ml-2">
+                ₹{course.price?.toLocaleString()}
+              </span>
             )}
             {course.discountedPrice && (
               <span className="text-emerald-400 text-sm ml-2 font-medium">
@@ -335,26 +394,31 @@ function PurchaseCard({ course, thumbnail, isFree, price, hasAccess, isProcessin
           </div>
         )}
 
-        {hasAccess ? (
-          <button className="btn-primary w-full mt-4">
-            <BookOpen size={18} /> Access Course
-          </button>
-        ) : (
-          <button onClick={onPurchase} disabled={isProcessing} className="btn-primary w-full mt-4 disabled:opacity-60">
-            {isProcessing ? <Spinner size="sm" /> : (
-              <>
-                <ShoppingCart size={18} /> {isFree ? 'Enroll for Free' : 'Buy Now'}
-              </>
-            )}
-          </button>
-        )}
+        <button
+          onClick={onPurchase}
+          disabled={isProcessing}
+          className="btn-primary w-full mt-4 disabled:opacity-60"
+        >
+          {isProcessing ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <ShoppingCart size={18} /> {isFree ? 'Enroll for Free' : 'Buy Now'}
+            </>
+          )}
+        </button>
 
         <div className="mt-5 space-y-2.5 text-sm">
-          <p className="text-dark-400 font-medium text-xs uppercase tracking-wider mb-2">This course includes:</p>
+          <p className="text-dark-400 font-medium text-xs uppercase tracking-wider mb-2">
+            This course includes:
+          </p>
           {[
-            course.accessType === 'lifetime' ? 'Lifetime access' : `${course.accessDurationDays || '?'} days access`,
+            course.accessType === 'lifetime'
+              ? 'Lifetime access'
+              : `${course.accessDurationDays || '?'} days access`,
             'Access on all devices',
-            course.curriculum?.reduce((s, sec) => s + (sec.lectures?.length || 0), 0) + ' lectures',
+            (course.curriculum?.reduce((s, sec) => s + (sec.lectures?.length || 0), 0) || 0) +
+              ' lectures',
             'Certificate of completion',
           ].map((item) => (
             <div key={item} className="flex items-center gap-2 text-dark-300">
