@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 export default function CourseDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user, setAuth, setUser } = useAuthStore();
+  const { isAuthenticated, user, setAuth, setUser, hasCourseAccess } = useAuthStore();
   const [expandedSection, setExpandedSection] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -27,14 +27,7 @@ export default function CourseDetailPage() {
     queryFn: () => getCourseBySlug(slug).then((r) => r.data.data),
   });
 
-  const hasAccess = isAuthenticated && user && course
-    ? user.purchasedCourses?.some((p) => {
-        const id = p.course?._id || p.course;
-        if (id !== course._id) return false;
-        if (!p.expiresAt) return true;
-        return new Date(p.expiresAt) > new Date();
-      })
-    : false;
+  const hasAccess = isAuthenticated && course ? hasCourseAccess(course._id) : false;
 
   // If already purchased, redirect straight to the player
   useEffect(() => {
